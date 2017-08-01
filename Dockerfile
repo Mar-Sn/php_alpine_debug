@@ -5,16 +5,18 @@ WORKDIR /var/www/html
 
 ENV DEBUG_IP 10.0.75.1
 
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+RUN apk add --no-cache --update autoconf file g++ gcc libc-dev make pkgconf re2c libxml2-dev
 
-RUN docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql
+RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli 
 
-#RUN docker-php-ext-install xdebug-2.5.0 && docker-php-ext-enable xdebug
+RUN docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql 
 
+RUN docker-php-ext-configure zip
+RUN docker-php-ext-install zip
 
-RUN apk add --no-cache autoconf file g++ gcc libc-dev make pkgconf re2c
 RUN pecl install xdebug
-RUN apk del autoconf file g++ gcc libc-dev make pkgconf re2c
+
+RUN apk del autoconf file g++ gcc libc-dev make pkgconf re2c libxml2-dev
 
 RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer
