@@ -1,13 +1,48 @@
 #!/bin/sh
 set -e
 
-echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/xdebug.in
-echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_autostart=1" >> /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.idekey=phpstorm" >> /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_host=$DEBUG_IP" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_autostart=1" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.idekey=phpstorm" >> /usr/local/etc/php/conf.d/xdebug.ini
+#echo "xdebug.remote_host=$DEBUG_IP" >> /usr/local/etc/php/conf.d/xdebug.ini
 
-php-fpm
+#grep -q -F '[global]' /usr/local/etc/php/conf.d/php.ini || echo '[global]' >> /usr/local/etc/php/conf.d/php.ini
+#grep -q -F 'include=/usr/local/etc/configfiles/*.conf' /usr/local/etc/php/conf.d/php.ini || echo 'include=/usr/local/etc/configfiles/*.conf' >> /usr/local/etc/php/conf.d/php.ini
+
+if [[ -z "${ERROR_LOG}" ]]; then
+    grep -q -F 'display_errors = 1' /usr/local/etc/php/conf.d/php.ini || echo 'display_errors = 1' >> /usr/local/etc/php/conf.d/php.ini
+    grep -q -F 'display_startup_errors = 1' /usr/local/etc/php/conf.d/php.ini || echo 'display_startup_errors = 1' >> /usr/local/etc/php/conf.d/php.ini
+    grep -q -F 'error_log = /var/log/php/error.log' /usr/local/etc/php/conf.d/php.ini || echo 'error_log = /var/log/php/error.log' >> /usr/local/etc/php/conf.d/php.ini
+    grep -q -F 'error_reporting = -1' /usr/local/etc/php/conf.d/php.ini || echo 'error_reporting = -1' >> /usr/local/etc/php/conf.d/php.ini
+    grep -q -F 'log_errors = 1' /usr/local/etc/php/conf.d/php.ini || echo 'log_errors = 1' >> /usr/local/etc/php/conf.d/php.ini
+fi
+
+cp /usr/local/etc/php-fpm.d/* /usr/local/etc/configfiles
+
+if [ -f /usr/local/etc/config/usercreate ]; then
+    echo 'User creation file found!'
+    chown root /usr/local/etc/config/usercreate
+    chmod 777 /usr/local/etc/config/usercreate
+    while read user group
+    do
+        echo "trying to add $user to group $group" 
+        if ! grep -q $group /etc/group; then 
+            #create group
+            addgroup $group
+            echo "added user to group $group"
+        fi
+        if [ ! `id -u $user 2>/dev/null || echo -0` -ge 1 ]; then 
+            #create user
+            adduser -D $user -G $group
+            echo "added user $user"
+        fi
+    done < /usr/local/etc/config/usercreate
+else
+    echo 'NO USER CREATE FILE DETECTED!'
+fi
+
+php-fpm --fpm-config /usr/local/etc/php-fpm.conf -c /usr/local/etc/php/conf.d/php.ini
