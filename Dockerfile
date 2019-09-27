@@ -1,11 +1,12 @@
-FROM php:7.1.5-fpm-alpine
+FROM php:7.3.10-fpm-alpine
 
 VOLUME /var/www/html
 WORKDIR /var/www/html
 
-ENV DEBUG_IP 10.0.75.1
+ENV DEBUG_IP 127.0.0.1
+ENV OPCACHE true
 
-RUN apk add --no-cache --update autoconf file g++ gcc libc-dev make pkgconf re2c libxml2-dev libpng-dev freetype-dev libjpeg-turbo-dev libpng-dev
+RUN apk add --no-cache --update autoconf file g++ gcc libzip libzip-dev libc-dev make pkgconf re2c libxml2-dev libpng-dev freetype-dev libjpeg-turbo-dev libpng-dev
 
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli 
 
@@ -17,9 +18,11 @@ RUN docker-php-ext-install gd && docker-php-ext-enable gd
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install zip
 
+RUN docker-php-ext-install opcache && docker-php-ext-enable opcache 
+
 RUN pecl install xdebug
 
-RUN apk del autoconf file g++ gcc libc-dev make pkgconf re2c libxml2-dev
+RUN apk del autoconf file g++ gcc libc-dev make pkgconf re2c libxml2-dev libzip libzip-dev
 
 RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer

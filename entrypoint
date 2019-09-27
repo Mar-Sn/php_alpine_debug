@@ -2,12 +2,27 @@
 set -e
 
 echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini
-echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini
 echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/xdebug.in
 echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/xdebug.ini
 echo "xdebug.remote_autostart=1" >> /usr/local/etc/php/conf.d/xdebug.ini
 echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/xdebug.ini
 echo "xdebug.idekey=phpstorm" >> /usr/local/etc/php/conf.d/xdebug.ini
 echo "xdebug.remote_host=$DEBUG_IP" >> /usr/local/etc/php/conf.d/xdebug.ini
+
+if [ "$DEBUG_IP" = "127.0.0.1" ]; then
+    echo "xdebug.remote_enable=0" >> /usr/local/etc/php/conf.d/xdebug.ini
+else 
+    echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini
+fi
+
+if [ "$OPCACHE" = "true" ]; then
+    echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/php.ini
+    echo "opcache.memory_consumption=512" >> /usr/local/etc/php/conf.d/php.ini
+    echo "opcache.max_accelerated_files=14000" >> /usr/local/etc/php/conf.d/php.ini
+    echo "opcache.interned_strings_buffer=16" >> /usr/local/etc/php/conf.d/php.ini
+    echo "opcache_revalidate_freq=240" >> /usr/local/etc/php/conf.d/php.ini    
+else 
+    echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/php.ini
+fi
 
 php-fpm
